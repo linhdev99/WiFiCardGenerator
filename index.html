@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WiFi NFC Card</title>
+
+    <!-- QR -->
+    <script src="https://unpkg.com/qr-code-styling@1.6.0"></script>
+
+    <!-- Export PNG -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", sans-serif;
+      }
+
+      body {
+        background: #0f0f0f;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 30px;
+        color: white;
+      }
+
+      /* ===== FORM ===== */
+      .form-box {
+        width: 360px;
+        background: #1c1c1c;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+        margin-bottom: 40px;
+      }
+
+      .form-box h2 {
+        text-align: center;
+        margin-bottom: 15px;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 12px;
+        margin: 8px 0;
+        border-radius: 12px;
+        border: none;
+        outline: none;
+      }
+
+      button {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 20px;
+        background: linear-gradient(90deg, #ffcc33, #ff9f1c);
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+        margin-top: 10px;
+      }
+
+      button:hover {
+        transform: scale(1.05);
+      }
+
+      /* ===== CARD ===== */
+      .card {
+        width: 360px;
+        border-radius: 35px;
+        padding: 35px 25px;
+        background: linear-gradient(160deg, #ffd54f, #ff9800);
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+        color: #111;
+        text-align: center;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+        transition: transform 0.2s ease;
+      }
+
+      .brand {
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .title {
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: 2px;
+      }
+
+      .icon {
+        font-size: 50px;
+      }
+
+      .sub {
+        font-size: 14px;
+      }
+
+      .qr-wrapper {
+        background: white;
+        padding: 20px;
+        border-radius: 25px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      }
+
+      .footer {
+        margin-top: auto;
+        font-size: 12px;
+        opacity: 0.8;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- FORM -->
+    <div class="form-box">
+      <h2>WiFi Card Generator</h2>
+      <input type="text" id="store" placeholder="Store Name" />
+      <input type="text" id="ssid" placeholder="WiFi Name (SSID)" />
+      <input type="text" id="password" placeholder="Password" />
+      <select id="encryption">
+        <option value="WPA">WPA/WPA2</option>
+        <option value="WEP">WEP</option>
+        <option value="nopass">No Password</option>
+      </select>
+      <button onclick="generateCard()">Generate Card</button>
+      <button onclick="downloadCard()">Download PNG</button>
+    </div>
+
+    <!-- CARD -->
+    <div class="card" id="wifiCard">
+      <div class="brand" id="storeName"></div>
+
+      <div class="title">TAP NFC<br />CONNECT</div>
+
+      <div class="icon">📶</div>
+      <div class="sub">WiFi For iPhone</div>
+
+      <div class="qr-wrapper">
+        <div id="qr"></div>
+      </div>
+
+      <div class="footer">
+        IstarothPL<br />
+        TikTok: @peterlinh.99
+      </div>
+    </div>
+
+    <script>
+      let qrCode;
+      const card = document.getElementById("wifiCard");
+
+      /* ===== GENERATE CARD ===== */
+      function generateCard() {
+        const store = document.getElementById("store").value;
+        const ssid = document.getElementById("ssid").value;
+        const password = document.getElementById("password").value;
+        const encryption = document.getElementById("encryption").value;
+
+        if (!ssid) {
+          alert("Nhập tên WiFi!");
+          return;
+        }
+
+        const wifiString = `WIFI:T:${encryption};S:${ssid};P:${password};;`;
+
+        document.getElementById("storeName").innerText = store || "Your Store";
+
+        const qrContainer = document.getElementById("qr");
+        qrContainer.innerHTML = "";
+
+        qrCode = new QRCodeStyling({
+          width: 220,
+          height: 220,
+          type: "svg",
+          data: wifiString,
+
+          image: "logo.png",
+
+          dotsOptions: {
+            color: "#111111",
+            type: "rounded",
+          },
+
+          backgroundOptions: {
+            color: "#ffffff",
+          },
+
+          cornersSquareOptions: {
+            type: "extra-rounded",
+            color: "#111111",
+          },
+
+          cornersDotOptions: {
+            type: "dot",
+            color: "#111111",
+          },
+
+          imageOptions: {
+            crossOrigin: "anonymous",
+            margin: 1,
+            imageSize: 0.3,
+          },
+        });
+
+        qrCode.append(qrContainer);
+        card.style.display = "flex";
+      }
+
+      /* ===== DOWNLOAD FULL CARD ===== */
+      function downloadCard() {
+        if (card.style.display === "none") {
+          alert("Hãy generate card trước!");
+          return;
+        }
+
+        html2canvas(card, { scale: 3 }).then((canvas) => {
+          const link = document.createElement("a");
+          link.download = "wifi-nfc-card.png";
+          link.href = canvas.toDataURL();
+          link.click();
+        });
+      }
+
+      /* ===== 3D TILT EFFECT ===== */
+      card.addEventListener("mousemove", (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const rotateY = (x / rect.width - 0.5) * 12;
+        const rotateX = (y / rect.height - 0.5) * -12;
+
+        card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      });
+
+      card.addEventListener("mouseleave", () => {
+        card.style.transform = "rotateX(0) rotateY(0)";
+      });
+    </script>
+  </body>
+</html>
